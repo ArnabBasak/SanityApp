@@ -1,0 +1,5 @@
+cat /export/socrates/system/jsocver|grep version
+cat /etc/redhat-release
+rpm -qa|grep ss-box
+mysql -uroot -pmysql -A soa -e "select count(*) as bridge_count from bridge_message"
+subprocess.Popen('service socratesContainer status')

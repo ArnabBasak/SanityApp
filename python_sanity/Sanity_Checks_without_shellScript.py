@@ -1,0 +1,159 @@
+from tkinter import *
+from tkinter import messagebox
+from tkinter import filedialog
+import os
+import re
+import paramiko
+import sys
+import subprocess
+import socket
+Commandcontent = None
+Mainwindow = Tk()
+Mainwindow.title('Sanity Checks')
+Mainwindow.configure(background='darkgreen')
+main_label = Label(Mainwindow,text="SANITY TEST FOR UK STORES",fg="white",font="Timesnewroman 20 bold")
+main_label.configure(background='darkgreen')
+main_label.pack(fill=X,pady=5)
+text_label=Label(Mainwindow,text="Enter IP for the stores",fg="white",font="Timesnewroman 13 bold")
+text_label.configure(background = 'darkgreen')
+text_label.pack()
+Mytext = Text(Mainwindow,width=30,height=5)
+Mytext.pack(pady=10)
+version_label = Label(Mainwindow,text="select the version of release",fg="white",font="Timesnewroman 13 bold")
+version_label.configure(background = 'darkgreen')
+version_label.pack()
+versioninfo = StringVar(Mainwindow)
+versioninfo.set("select")
+dropmenu = OptionMenu(Mainwindow,versioninfo,"select","D2.4.40","D2.4.41","D2.4.42","D2.4.43","D2.4.44","D2.4.45","D2.4.46","D2.4.47","D2.4.48","D2.4.49","D2.4.50")
+dropmenu.pack(pady=10)
+command_label=Label(Mainwindow,text="Enter the release specific checks",fg="white",font="Timesnewroman 13 bold")
+command_label.configure(background = 'darkgreen')
+command_label.pack()
+Commandtext = Text(Mainwindow,width=30,height=5)
+Commandtext.pack(pady=10)
+def SanityChecks():
+        username = "techsupp"
+        password = "be4nsh00t"		
+        inputfile = open("inputfile.txt","r")
+        if os.path.isfile('commandfile.txt') == False:
+               commandfile = open('commandfile.txt','w')
+               commandfile.write("cat /export/socrates/system/jsocver|grep version\n")
+               commandfile.write("cat /etc/redhat-release\n")
+               commandfile.write("rpm -qa|grep ss-box\n")
+               commandfile.write('mysql -uroot -pmysql -A soa -e "select count(*) as bridge_count from bridge_message"\n')
+               commandfile.write("subprocess.Popen('service socratesContainer status')\n")
+              # commandfile.write('python import os os.system("service rj_to_soa_bridge status")')
+               commandfile.close()
+               commandfile = open('commandfile.txt','r')
+               devices = inputfile.readlines()
+               commands = commandfile.readlines()
+        else:
+               commandfile = open('commandfile.txt','r')
+               devices = inputfile.readlines()
+               commands = commandfile.readlines()                        
+        if os.path.isfile('output.txt') == True:
+                 os.remove('output.txt')
+        for host in devices:
+                host = host.rstrip()
+                for command in commands:
+                        try:
+                                ssh = paramiko.SSHClient()
+                                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                                ssh.connect(host, username=username, password=password)
+                                stdin, stdout, stderr = ssh.exec_command(command)
+                                output = stdout.read()
+                                data = []
+                                data.extend([host,output])
+                                for  element in data:
+                                        outputfile = open("output.txt","a")
+                                        outputfile.write("%s\n" % element)
+                                        outputfile.close()
+                        except(socket.error,paramiko.AuthenticationException):
+                                tkMessageBox.showinfo("unreachable",host)				
+       # tkMessageBox.showinfo("information","outputfile is ready")
+       # outputfile = open("output.txt","r")
+       # data = outputfile.read()
+       # outputfile.close()
+       # Results = Label(Mainwindow, text = data,fg="white",font="Timesnewroman 13 bold")
+       # Results.configure(background = "darkgreen")
+       # Results.grid(row = 1, column = 1)
+       # Results.pack()
+       # try:
+       #      filename = 'output.txt'
+       #      cmd = os.environ.get('EDITOR','vi')+ ' '+ filename
+       #      subprocess.call(cmd,shell=True)
+            # tkMessageBox.showinfo("information","outputfile is ready")
+#        except:
+#             tkMessageBox.showerror('Error','since all the host are unreachable output file is not present')                
+        inputfile.close()
+        commandfile.close()
+        outresult = tkMessageBox.askquestion('View file','Click ok to view file',icon='warning')
+        if outresult == 'yes':
+           Mainwindow.iconify()
+           filename = 'output.txt'
+           cmd = os.environ.get('EDITOR','vi')+ ' '+ filename
+           subprocess.call(cmd,shell=True)
+        else:
+           tkMessageBox.showinfo('information','all checks are done output file is ready')
+
+def callback():
+    content = Mytext.get("1.0","end-1c")
+    Commandcontent = Commandtext.get("1.0","end-1c")
+    pattern = r"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5    ]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
+    if len(content) <= 2:
+        tkMessageBox.showerror('Input Error','improper input')
+    elif re.match(pattern, content):
+            inputfile_path = open('inputfile.txt','w')
+            inputfile_path.write(content)
+            inputfile_path.close()
+            if len(Commandcontent) <= 2:
+                  tkMessageBox.showinfo("information","you have not inserted release specific checks")		                
+            else:
+                    commandfile = open('commandfile.txt','w')
+                    commandfile.write(Commandcontent)
+                    commandfile.close()
+            drop_data = versioninfo.get()
+            if drop_data == "select":
+                tkMessageBox.showinfo("Note","Release version is not specified..\ndoing normal checks")
+            else:
+                cmd = "cat /export/socrates/system/jsocver|grep "
+                serverversion = cmd + drop_data 
+                inputfile = open('inputfile.txt','r')
+                devices = inputfile.readlines()
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                for host in devices:
+                        host = host.rstrip()
+                        try:
+                                ssh.connect(host, username='techsupp', password='be4nsh00t')
+                                stdin,stdout,stderr = ssh.exec_command(serverversion)
+                                output =  stdout.read()
+                                if output == "":
+                                        Resultsdata = host+" is not in "+drop_data+" version"
+                                        Results = Label(Mainwindow, text = Resultsdata,fg="white",font="Timesnewroman 20 bold")
+                                        Results.configure(background = "darkgreen")
+                                        Results.grid(row = 1, column = 1)
+                                        Results.pack()
+                                else:
+                                        Resultsdata = host+" is in "+drop_data+" version"
+                                        Results = Label(Mainwindow, text = Resultsdata,fg="white",font="Timesnewroman 20 bold")
+                                        Results.configure(background = "darkgreen")
+                                        Results.grid(row = 1, column = 1)
+                                        Results.pack()
+                        except(socket.error,paramiko.AuthenticationException):
+                                         tkMessageBox.showinfo("unreachable",host)	 	 
+                inputfile.close()
+    Mainwindow.update()
+    SanityChecks()
+def exit():
+     Mainwindow.destroy()
+    #Mainwindow.iconify()		
+Main_Button = Button(Mainwindow,text="Start",fg="darkgreen",font="calibari 13 bold", command=callback)
+Main_Button.configure(background = "white")
+Main_Button.pack(pady = 10)
+destroy_Button = Button(Mainwindow,text="Close",fg="darkgreen",font="calibari 13 bold",command=exit)
+destroy_Button.configure(background = "white")
+destroy_Button.pack(pady = 10)
+w, h = Mainwindow.winfo_screenwidth(), Mainwindow.winfo_screenheight()
+Mainwindow.geometry("%dx%d+0+0" % (w, h))
+Mainwindow.mainloop()

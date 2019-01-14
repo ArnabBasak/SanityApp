@@ -1,0 +1,26 @@
+Performing checks on 10.36.69.1
+spawn scp ./script.sh techsupp@10.36.69.1:/tmp
+techsupp@10.36.69.1's password: 
+script.sh                                                                                                            0%    0     0.0KB/s   --:-- ETAscript.sh                                                                                                          100%   62     0.1KB/s   00:00    
+spawn ssh techsupp@10.36.69.1 'bash' < /tmp/script.sh
+techsupp@10.36.69.1's password: 
+Red Hat Enterprise Linux Workstation release 6.0 (Santiago)
+# Version Information
+echo "version:		D2.4.42"
+echo "release:		release3"
+echo "variant:		english"
+echo "build:		63"
+echo "build_date:	11/10/2017 12:01:31"
+Performing checks on 10.36.69.1
+spawn scp ./script.sh techsupp@10.36.69.1:/tmp
+techsupp@10.36.69.1's password: 
+script.sh                                                                                                            0%    0     0.0KB/s   --:-- ETAscript.sh                                                                                                          100%   62     0.1KB/s   00:00    
+spawn ssh techsupp@10.36.69.1 'bash' < /tmp/script.sh
+techsupp@10.36.69.1's password: 
+Red Hat Enterprise Linux Workstation release 6.0 (Santiago)
+# Version Information
+echo "version:		D2.4.42"
+echo "release:		release3"
+echo "variant:		english"
+echo "build:		63"
+echo "build_date:	11/10/2017 12:01:31"
